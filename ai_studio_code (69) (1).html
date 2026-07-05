@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Care Plus Clinic | Professional Medical System</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00bfa5;
+            --secondary: #263238;
+            --accent: #f0fdfa;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --primary: #26e7a6;
+            --secondary: #ffffff;
+            --accent: #132724;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Poppins', 'Cairo', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            transition: 0.3s;
+        }
+
+        .section-view {
+            display: none;
+            animation: fadeIn 0.4s ease;
+            padding-bottom: 80px;
+        }
+
+        .active-view {
+            display: block;
+        }
+
+        .app-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .doc-card {
+            background: var(--bg-card);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: 0.3s;
+            height: 100%;
+            position: relative;
+        }
+
+        .doc-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-10px);
+        }
+
+        .doc-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            margin: 15px auto 5px;
+            display: block;
+        }
+
+        .price-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary);
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .st-confirmed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .st-waitlist {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .st-arrived {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .st-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .st-completed {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .weekly-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .day-column {
+            min-width: 130px;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .time-slot {
+            font-size: 0.75rem;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+            font-weight: 600;
+        }
+
+        .pass-wrapper {
+            position: relative;
+        }
+
+        .pass-wrapper i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm bg-white">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="#" onclick="location.reload()"><i
+                    class="fas fa-heartbeat me-2"></i> Care Plus Clinic</a>
+            <div class="d-flex align-items-center">
+                <i class="fas fa-moon me-3" onclick="toggleTheme()" style="cursor:pointer; font-size: 1.2rem;"></i>
+                <div class="position-relative me-3" onclick="showNotifs()" style="cursor:pointer">
+                    <i class="fas fa-bell"></i><span id="notifBadge"
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                        style="display:none; font-size:0.6rem;">0</span>
+                </div>
+                <div id="userBadge" class="badge bg-dark me-2 p-2" style="display:none; font-size: 0.8rem;"></div>
+                <button id="logoutBtn" class="btn btn-outline-danger btn-sm rounded-pill px-3" style="display:none;"
+                    onclick="logout()">Sign Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- LANDING -->
+    <div id="landingView" class="section-view active-view">
+        <div class="text-center py-5"
+            style="background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; border-radius: 0 0 50px 50px;">
+            <h1 class="fw-bold display-4">Care Plus Clinic</h1>
+            <p class="lead">Integrated Professional Healthcare Platform</p>
+        </div>
+        <div class="container mt-5">
+            <div class="row g-4 justify-content-center">
+                <div class="col-6 col-md-3" onclick="setupAuth('patient')">
+                    <div class="app-card text-center shadow-sm" style="cursor:pointer"><i
+                            class="fas fa-user-injured fa-3x text-primary mb-3"></i>
+                        <h5>Patient</h5>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3" onclick="setupAuth('doctor')">
+                    <div class="app-card text-center shadow-sm" style="cursor:pointer"><i
+                            class="fas fa-user-md fa-3x text-info mb-3"></i>
+                        <h5>Doctor</h5>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3" onclick="setupAuth('reception')">
+                    <div class="app-card text-center shadow-sm" style="cursor:pointer"><i
+                            class="fas fa-concierge-bell fa-3x text-warning mb-3"></i>
+                        <h5>Reception</h5>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3" onclick="setupAuth('admin')">
+                    <div class="app-card text-center shadow-sm" style="cursor:pointer"><i
+                            class="fas fa-chart-line fa-3x text-danger mb-3"></i>
+                        <h5>Admin</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH SECTION -->
+    <div id="authView" class="section-view container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="app-card shadow-lg">
+                    <h3 class="fw-bold text-center mb-4" id="authTitle" style="color: var(--primary)">Login</h3>
+                    <input type="hidden" id="selectedRole">
+                    <div id="docSelectorDiv" class="mb-3" style="display:none;"><label
+                            class="form-label fw-bold small">Select Doctor Profile</label><select id="docLoginSelect"
+                            class="form-select border-primary"></select></div>
+                    <div id="loginForm">
+                        <div class="mb-3" id="mainLoginGroup"><label class="small fw-bold">ID or Clinic
+                                Email</label><input type="text" class="form-control" id="loginInput"
+                                placeholder="Enter ID or Email"></div>
+                        <div class="mb-4"><label class="small fw-bold">Password</label>
+                            <div class="pass-wrapper"><input type="password" class="form-control" id="loginPass"><i
+                                    class="fas fa-eye" onclick="togglePass('loginPass')"></i></div>
+                        </div>
+                        <button class="btn btn-primary w-100 py-2 fw-bold" onclick="handleLogin()">Sign In</button>
+                    </div>
+                    <div id="registerForm" style="display:none;">
+                        <div class="mb-2"><label class="small">Full Name</label><input type="text" class="form-control"
+                                id="regName"></div>
+                        <div class="mb-2"><label class="small">Clinic Email</label><input type="email"
+                                class="form-control" id="regEmail" placeholder="user@careplus.clinic"></div>
+                        <div class="mb-2"><label class="small">Phone Number (Egyptian Only)</label><input type="tel"
+                                class="form-control" id="regPhone" placeholder="010 / 011 / 012 / 015"></div>
+                        <div class="mb-2"><label class="small">Password</label>
+                            <div class="pass-wrapper"><input type="password" class="form-control" id="regPass"><i
+                                    class="fas fa-eye" onclick="togglePass('regPass')"></i></div>
+                        </div>
+                        <button class="btn btn-success w-100 mt-3 py-2 fw-bold" onclick="handleRegister()">Create
+                            Account</button>
+                    </div>
+                    <div id="authToggleDiv" class="text-center mt-3"><small>No Account? <a href="#"
+                                class="text-primary fw-bold" onclick="toggleAuth()">Register Now</a></small></div>
+                    <div class="text-center mt-2"><button class="btn btn-link btn-sm text-muted"
+                            onclick="location.reload()">Back</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARDS (No deletions, just rendering updates) -->
+    <div id="patientDash" class="section-view container my-5">
+        <h3 class="fw-bold mb-4">Patient Portal</h3>
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item"><button class="nav-link active" onclick="showTab('p-book', this)">Book Doctor</button>
+            </li>
+            <li class="nav-item"><button class="nav-link" onclick="showTab('p-apps', this); renderPatientApps();">My
+                    Appointments</button></li>
+            <li class="nav-item"><button class="nav-link" onclick="showTab('p-profile', this); loadProfile();">Medical
+                    Profile</button></li>
+        </ul>
+        <div id="p-book" class="tab-pane active">
+            <div class="row g-4" id="doctorsListContainer"></div>
+        </div>
+        <div id="p-apps" class="tab-pane" style="display:none;">
+            <div class="app-card">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientTable"></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="p-profile" class="tab-pane" style="display:none;">
+            <div class="app-card" id="profileInject"></div>
+        </div>
+    </div>
+
+    <!-- DOCTOR, RECEPTION, ADMIN Views (Internal JS handles them) -->
+    <div id="doctorDash" class="section-view container my-5">
+        <h3 class="fw-bold mb-4">Doctor Hub: <span id="docNameDash" class="text-primary"></span></h3>
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item"><button class="nav-link active"
+                    onclick="showTab('d-queue', this); renderDocQueue();">Patient Queue</button></li>
+            <li class="nav-item"><button class="nav-link" onclick="showTab('d-weekly', this); renderDocWeekly();">Weekly
+                    Schedule</button></li>
+            <li class="nav-item"><button class="nav-link" onclick="showTab('d-schedule', this)">Shift Settings</button>
+            </li>
+        </ul>
+        <div id="d-queue" class="tab-pane active">
+            <div class="app-card">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Patient (ID)</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctorTable"></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="d-weekly" class="tab-pane" style="display:none;">
+            <div class="app-card">
+                <div id="weeklyGrid" class="weekly-grid mt-3"></div>
+            </div>
+        </div>
+        <div id="d-schedule" class="tab-pane" style="display:none;">
+            <div class="app-card" id="scheduleInject"></div>
+        </div>
+    </div>
+
+    <div id="receptionDash" class="section-view container my-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold">Reception Hub</h3>
+            <div class="btn-group"><button class="btn btn-primary"
+                    onclick="filterReception('today')">Today</button><button class="btn btn-info text-white"
+                    onclick="filterReception('weekly')">Full List</button><button class="btn btn-warning"
+                    onclick="renderReceptionMaster()">Master Grid</button></div>
+        </div>
+        <div id="receptionContent"></div>
+    </div>
+
+    <div id="adminDash" class="section-view container my-5">
+        <h3 class="fw-bold mb-4">Admin Dashboard</h3>
+        <div class="app-card">
+            <h5 class="mb-3 text-primary">Clinic Performance Reports</h5>
+            <div class="table-responsive">
+                <table class="table align-middle text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Doctor Name</th>
+                            <th>Today</th>
+                            <th>Weekly</th>
+                            <th>Monthly</th>
+                            <th>Revenue (EGP)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminReportTable"></tbody>
+                </table>
+            </div>
+        </div>
+        <h5 class="mt-4 text-primary">Patient Feedback</h5>
+        <div id="feedbackList"></div>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal fade" id="patRecordModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Patient Medical Profile</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="patRecordContent"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Book Appointment</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h5 id="mDocName" class="text-center text-primary mb-3 fw-bold"></h5><input type="date" id="mDate"
+                        class="form-control mb-3" onchange="updateTimeSlots('mDate', 'mTime')"><select id="mTime"
+                        class="form-select mb-3"></select><button class="btn btn-primary w-100 fw-bold"
+                        onclick="confirmBook()">Confirm Booking</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="rxModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Prescription</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="rxDoctorPart" style="display:none;"><textarea id="rxInput" class="form-control mb-3"
+                            rows="5"></textarea><button class="btn btn-primary w-100" onclick="saveRx()">Save &
+                            Complete</button></div>
+                    <div id="rxPatientPart" style="display:none;" class="alert alert-info text-dark"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="notifModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Notifications</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" id="notifList" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="feedbackModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Rate Doctor</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body"><label>Rating (1-5):</label><input type="number" id="fRate"
+                        class="form-control mb-2" min="1" max="5" value="5"><label>Comments:</label><textarea
+                        id="fComment" class="form-control mb-3"></textarea><button class="btn btn-primary w-100"
+                        onclick="submitFeedback()">Submit</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- DATA & INITIALIZATION ---
+        function genShifts(start) { let slots = []; for (let i = 0; i < 8; i++) { let h = start + i; if (h >= 24) h -= 24; let s = h >= 12 ? "PM" : "AM"; let d = h > 12 ? h - 12 : h; if (d === 0) d = 12; slots.push(`${d}:00 ${s}`, `${d}:30 ${s}`); } return slots; }
+        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+        let doctors = JSON.parse(localStorage.getItem('cp_doctors')) || [
+            { id: 2001, name: "Ahmed Hassan", days: [0, 2, 4], spec: "Cardiology", price: 500, img: "https://randomuser.me/api/portraits/men/11.jpg", hours: genShifts(9) },
+            { id: 2002, name: "Sarah Mahmoud", days: [1, 3, 6], spec: "Dentistry", price: 350, img: "https://randomuser.me/api/portraits/women/44.jpg", hours: genShifts(9) },
+            { id: 2003, name: "Khaled Ali", days: [0, 2, 4], spec: "Orthopedics", price: 450, img: "https://randomuser.me/api/portraits/men/86.jpg", hours: genShifts(9) },
+            { id: 2004, name: "Fatma Zahra", days: [1, 3, 6], spec: "Neurology", price: 600, img: "https://randomuser.me/api/portraits/women/68.jpg", hours: genShifts(9) },
+            { id: 2005, name: "Omar Farouk", days: [0, 2, 4], spec: "Dermatology", price: 400, img: "https://randomuser.me/api/portraits/men/32.jpg", hours: genShifts(9) },
+            { id: 2006, name: "Hoda Abdel-Rahman", days: [1, 3, 6], spec: "Ophthalmology", price: 400, img: "https://randomuser.me/api/portraits/women/33.jpg", hours: genShifts(17) },
+            { id: 2007, name: "Kareem Adel", days: [0, 2, 4], spec: "Physical Therapy", price: 300, img: "https://randomuser.me/api/portraits/men/64.jpg", hours: genShifts(17) },
+            { id: 2008, name: "Mona El-Sayed", days: [1, 3, 6], spec: "Pediatrics", price: 350, img: "https://randomuser.me/api/portraits/women/24.jpg", hours: genShifts(17) },
+            { id: 2009, name: "Youssef Ibrahim", days: [0, 2, 4], spec: "ENT", price: 400, img: "https://randomuser.me/api/portraits/men/52.jpg", hours: genShifts(17) },
+            { id: 2010, name: "Nourhan Ali", days: [1, 3, 6], spec: "Psychiatry", price: 700, img: "https://randomuser.me/api/portraits/women/90.jpg", hours: genShifts(17) }
+        ];
+
+        let apps = JSON.parse(localStorage.getItem('cp_apps')) || [];
+        let users = JSON.parse(localStorage.getItem('cp_users')) || [];
+        let notifs = JSON.parse(localStorage.getItem('cp_notifs')) || [];
+        let profiles = JSON.parse(localStorage.getItem('cp_profiles')) || {};
+        let feedbacks = JSON.parse(localStorage.getItem('cp_feedbacks')) || [];
+        let currentUser = null, selectedDoc = null;
+
+        function getLocalToday() { const now = new Date(); return new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0]; }
+        function saveData() { localStorage.setItem('cp_apps', JSON.stringify(apps)); localStorage.setItem('cp_notifs', JSON.stringify(notifs)); }
+        function togglePass(id) { const x = document.getElementById(id); x.type = x.type === "password" ? "text" : "password"; }
+        function toggleTheme() { const t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; document.documentElement.setAttribute('data-theme', t); }
+
+        // --- NOTIFICATIONS ---
+        function addNotif(targetId, msg) {
+            if (!targetId) return;
+            notifs.push({ userId: targetId.toString(), msg, time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }), date: getLocalToday() });
+            saveData(); updateNotifBadge();
+        }
+        function updateNotifBadge() {
+            if (!currentUser) return;
+            const b = document.getElementById('notifBadge');
+            const count = notifs.filter(n => n.userId === currentUser.id.toString()).length;
+            b.innerText = count; b.style.display = count > 0 ? 'block' : 'none';
+        }
+        function showNotifs() {
+            const list = document.getElementById('notifList');
+            const myNotifs = notifs.filter(n => n.userId === currentUser.id.toString()).reverse();
+            list.innerHTML = myNotifs.length ? myNotifs.map(n => `<div class="p-3 border-bottom shadow-sm" style="background:rgba(0,191,165,0.05)"><div class="d-flex justify-content-between mb-1"><small class="text-primary fw-bold">${n.time}</small><small class="text-muted" style="font-size:0.7rem">${n.date}</small></div><div class="text-dark small fw-bold">${n.msg}</div></div>`).join('') : `<div class="p-4 text-center text-muted">No Clinic notifications.</div>`;
+            new bootstrap.Modal(document.getElementById('notifModal')).show();
+        }
+
+        // --- AUTH & PHONE VALIDATION ---
+        function handleRegister() {
+            const name = document.getElementById('regName').value, email = document.getElementById('regEmail').value, pass = document.getElementById('regPass').value, phone = document.getElementById('regPhone').value;
+            if (!name || !email || !pass || !phone) return alert("All fields are required!");
+
+            // Phone validation (Egyptian carries)
+            const phoneRegex = /^(010|011|012|015)[0-9]{8}$/;
+            if (!phoneRegex.test(phone)) return alert("Invalid Phone Number! Must start with 010, 011, 012, or 015 and be 11 digits.");
+
+            const pId = 1000 + users.length + 1;
+            users.push({ id: pId, name, email, pass, phone, role: 'patient' });
+            localStorage.setItem('cp_users', JSON.stringify(users));
+            alert(`✅ Welcome to Care Plus Clinic!\nYour Clinic ID is: ${pId}`); toggleAuth();
+        }
+
+        function handleLogin() {
+            const role = document.getElementById('selectedRole').value, input = document.getElementById('loginInput').value.trim().toLowerCase(), pass = document.getElementById('loginPass').value;
+            if (role === 'patient') {
+                const u = users.find(x => (x.email.toLowerCase() === input || x.id == input) && x.pass === pass);
+                if (!u) return alert("Wrong Credentials"); currentUser = u;
+            } else if (role === 'doctor') {
+                const d = doctors.find(x => x.id == document.getElementById('docLoginSelect').value);
+                if (pass === "123") currentUser = { ...d, role: 'doctor' }; else return alert("Wrong Password");
+            } else if (role === 'reception') {
+                if ((input == "3001" || input == "3002") && pass === "123") currentUser = { id: input, name: input == "3001" ? "Morning" : "Evening", role: 'reception', shift: input == "3001" ? 'morning' : 'evening' };
+                else return alert("ID 3001 or 3002");
+            } else if (role === 'admin' && input == "4001" && pass === "123") currentUser = { id: 4001, name: "Clinic Admin", role: 'admin' };
+            else return alert("Login Error");
+            initDash();
+        }
+
+        function setupAuth(r) {
+            document.getElementById('landingView').classList.remove('active-view'); document.getElementById('authView').classList.add('active-view'); document.getElementById('selectedRole').value = r;
+            document.getElementById('authTitle').innerText = r.toUpperCase() + " LOGIN";
+            document.getElementById('docSelectorDiv').style.display = r === 'doctor' ? 'block' : 'none';
+            document.getElementById('mainLoginGroup').style.display = r === 'doctor' ? 'none' : 'block';
+            if (r === 'doctor') { const s = document.getElementById('docLoginSelect'); s.innerHTML = doctors.map(d => `<option value="${d.id}">${d.name}</option>`).join(''); }
+        }
+
+        function toggleAuth() { const l = document.getElementById('loginForm'), r = document.getElementById('registerForm'); l.style.display = l.style.display === 'none' ? 'block' : 'none'; r.style.display = r.style.display === 'none' ? 'block' : 'none'; }
+        function logout() { location.reload(); }
+        function showTab(id, el) { el.closest('.nav').querySelectorAll('.nav-link').forEach(l => l.classList.remove('active')); el.classList.add('active'); el.closest('.section-view').querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none'); document.getElementById(id).style.display = 'block'; }
+
+        // --- DASHBOARD LOGIC ---
+        function initDash() {
+            document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active-view'));
+            document.getElementById('userBadge').style.display = 'block'; document.getElementById('userBadge').innerText = `${currentUser.name} (ID:${currentUser.id})`;
+            document.getElementById('logoutBtn').style.display = 'block';
+            if (currentUser.role === 'patient') { document.getElementById('patientDash').classList.add('active-view'); renderDoctors(); }
+            else if (currentUser.role === 'doctor') { document.getElementById('doctorDash').classList.add('active-view'); document.getElementById('docNameDash').innerText = currentUser.name; initDocScheduleTab(); renderDocQueue(); }
+            else if (currentUser.role === 'reception') { document.getElementById('receptionDash').classList.add('active-view'); filterReception('today'); }
+            else if (currentUser.role === 'admin') { document.getElementById('adminDash').classList.add('active-view'); renderAdminReports(); }
+            updateNotifBadge();
+        }
+
+        // --- PATIENT RENDERING (WITH WORKING DAYS) ---
+        function renderDoctors() {
+            const container = document.getElementById('doctorsListContainer');
+            container.innerHTML = doctors.map(d => {
+                const daysLabel = d.days.map(i => dayNames[i].substring(0, 3)).join(", ");
+                return `
+                <div class="col-md-3">
+                    <div class="doc-card text-center shadow-sm">
+                        <div class="price-badge">${d.price} EGP</div>
+                        <img src="${d.img}" class="doc-img">
+                        <h6 class="fw-bold">Dr. ${d.name}</h6>
+                        <small class="text-primary d-block">${d.spec}</small>
+                        <small class="text-muted d-block mt-1"><i class="fas fa-calendar-day me-1"></i>${daysLabel}</small>
+                        <button class="btn btn-primary btn-sm w-100 mt-2 rounded-pill" onclick="openBook(${d.id})">Book Appointment</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openBook(id) { selectedDoc = doctors.find(d => d.id === id); document.getElementById('mDocName').innerText = "Dr. " + selectedDoc.name; document.getElementById('mDate').value = ""; document.getElementById('mTime').innerHTML = ""; new bootstrap.Modal(document.getElementById('bookingModal')).show(); }
+
+        function updateTimeSlots(dId, tId) {
+            const val = document.getElementById(dId).value; if (!val) return;
+            const day = new Date(val).getDay(); const s = document.getElementById(tId); s.innerHTML = "";
+            if (!selectedDoc.days.includes(day)) { alert("Doctor is OFF on this day!"); document.getElementById(dId).value = ""; return; }
+            selectedDoc.hours.forEach(h => s.innerHTML += `<option>${h}</option>`);
+        }
+
+        function confirmBook() {
+            const d = document.getElementById('mDate').value, t = document.getElementById('mTime').value;
+            if (!d || !t) return alert("Select time");
+            const isTaken = apps.some(a => a.docId == selectedDoc.id && a.date == d && a.time == t && a.status === 'Confirmed');
+            const st = isTaken ? 'Waitlist' : 'Confirmed';
+            const newApp = { id: Date.now(), docId: selectedDoc.id, docName: "Dr. " + selectedDoc.name, patName: currentUser.name, patId: currentUser.id, date: d, time: t, status: st, price: selectedDoc.price, rx: '' };
+            apps.push(newApp); saveData();
+            addNotif(currentUser.id, `Booking ${st}: ${d} with Dr. ${selectedDoc.name}`);
+            addNotif(selectedDoc.id, `New appointment: ${currentUser.name} on ${d}`);
+            alert(`✅ ${st} Successfully!`); bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide(); initDash();
+        }
+
+        // --- ADMIN REPORT (FIXED REVENUE MULTIPLICATION) ---
+        function renderAdminReports() {
+            const tb = document.getElementById('adminReportTable'); tb.innerHTML = "";
+            const today = getLocalToday();
+            doctors.forEach(doc => {
+                const dA = apps.filter(a => a.docId == doc.id && a.status !== 'Cancelled');
+                const daily = dA.filter(a => a.date === today).length;
+                const totalCount = dA.filter(a => ['Confirmed', 'Arrived', 'Completed'].includes(a.status)).length;
+
+                // Revenue = Price * Number of Valid Appointments
+                const revenue = totalCount * parseInt(doc.price);
+
+                tb.innerHTML += `
+                <tr>
+                    <td>Dr. ${doc.name}</td>
+                    <td>${daily}</td>
+                    <td>${dA.length}</td>
+                    <td>${dA.length}</td>
+                    <td class="text-success fw-bold">${revenue} EGP</td>
+                </tr>`;
+            });
+            document.getElementById('feedbackList').innerHTML = feedbacks.slice().reverse().map(f => `<div class="app-card small"><b>Dr. ${f.docName}:</b> <span class="text-warning">${f.rate} ⭐</span><br>${f.comment}</div>`).join('');
+        }
+
+        // --- RECEPTION (TODAY FIX) ---
+        function filterReception(mode) {
+            const cont = document.getElementById('receptionContent'); cont.innerHTML = '';
+            const today = getLocalToday();
+            const filtered = apps.filter(a => {
+                const isShift = (currentUser.shift === 'morning' && a.docId <= 2005) || (currentUser.shift === 'evening' && a.docId >= 2006);
+                return a.status !== 'Cancelled' && isShift && (mode === 'today' ? a.date === today : true);
+            });
+            doctors.forEach(doc => {
+                const dA = filtered.filter(a => a.docId == doc.id);
+                if (dA.length) {
+                    let rows = dA.map(a => `<tr><td>${a.patName}</td><td>${a.date} | ${a.time}</td><td><span class="status-badge st-${a.status.toLowerCase()}">${a.status}</span></td><td><button class="btn btn-sm btn-success me-1" onclick="markArrived(${a.id})">Arrival</button><button class="btn btn-sm btn-danger" onclick="cancelApp(${a.id})">Cancel</button></td></tr>`).join('');
+                    cont.innerHTML += `<div class="app-card"><h6>Dr. ${doc.name}</h6><table class="table table-sm small">${rows}</table></div>`;
+                }
+            });
+        }
+
+        function renderReceptionMaster() {
+            const cont = document.getElementById('receptionContent'); cont.innerHTML = '';
+            const myD = doctors.filter(d => (currentUser.shift === 'morning' && d.id <= 2005) || (currentUser.shift === 'evening' && d.id >= 2006));
+            myD.forEach(doc => {
+                let grid = `<div class="app-card"><h6>Dr. ${doc.name} - Master Grid</h6><div class="weekly-grid mt-3">`;
+                for (let i = 0; i < 7; i++) {
+                    let d = new Date(); d.setDate(d.getDate() + i); let dS = d.toISOString().split('T')[0];
+                    grid += `<div class="day-column text-center small"><div class="fw-bold border-bottom mb-2">${dayNames[d.getDay()]}</div>`;
+                    if (doc.days.includes(d.getDay())) {
+                        doc.hours.forEach(h => {
+                            const taken = apps.find(a => a.docId == doc.id && a.date == dS && a.time == h && a.status !== 'Cancelled');
+                            grid += `<div class="time-slot ${taken ? 'bg-danger text-white' : 'bg-success text-white'}">${h.split(' ')[0]}</div>`;
+                        });
+                    } else grid += `<div class="text-muted mt-3">OFF</div>`;
+                    grid += `</div>`;
+                }
+                cont.innerHTML += grid + `</div></div>`;
+            });
+        }
+
+        // --- DOCTOR QUEUE & RX ---
+        function renderDocQueue() {
+            document.getElementById('doctorTable').innerHTML = apps.filter(a => a.docId == currentUser.id && a.status !== 'Cancelled').map(a => `<tr><td>${a.patName} (${a.patId})</td><td>${a.time}</td><td><span class="status-badge st-${a.status.toLowerCase()}">${a.status}</span></td><td><button class="btn btn-sm btn-info text-white me-1" onclick="viewPatRecord(${a.patId})">Files</button><button class="btn btn-sm btn-primary" onclick="openRx(${a.id})">Examine</button></td></tr>`).join('');
+        }
+        function markArrived(id) { const a = apps.find(x => x.id === id); a.status = 'Arrived'; addNotif(a.patId, "Registration: You have arrived at the clinic."); saveData(); initDash(); }
+        function cancelApp(id) { if (confirm("Cancel?")) { const a = apps.find(x => x.id === id); a.status = 'Cancelled'; addNotif(a.patId, `Care Plus: Appointment with ${a.docName} cancelled.`); saveData(); initDash(); } }
+        function saveRx() { const a = apps.find(x => x.id === activeAppId); a.rx = document.getElementById('rxInput').value; a.status = 'Completed'; addNotif(a.patId, `Prescription is ready from Dr. ${currentUser.name}`); saveData(); bootstrap.Modal.getInstance(document.getElementById('rxModal')).hide(); renderDocQueue(); }
+        function openRx(id) { activeAppId = id; const a = apps.find(x => x.id === id); if (currentUser.role === 'doctor') { document.getElementById('rxDoctorPart').style.display = 'block'; document.getElementById('rxPatientPart').style.display = 'none'; document.getElementById('rxInput').value = a.rx || ''; } else { document.getElementById('rxDoctorPart').style.display = 'none'; document.getElementById('rxPatientPart').style.display = 'block'; document.getElementById('rxPatientPart').innerText = a.rx || "Pending examination..."; } new bootstrap.Modal(document.getElementById('rxModal')).show(); }
+
+        // --- PROFILE & SETTINGS ---
+        function loadProfile() {
+            const p = profiles[currentUser.id] || {}; document.getElementById('profileInject').innerHTML = `
+            <div class="row g-3">
+                <div class="col-md-6"><label class="small fw-bold">Full Name</label><input type="text" id="pName" class="form-control" value="${currentUser.name}" readonly></div>
+                <div class="col-md-6"><label class="small fw-bold">Address</label><input type="text" id="pAddress" class="form-control" value="${p.address || ''}"></div>
+                <div class="col-md-4"><label class="small fw-bold">Age</label><input type="number" id="pAge" class="form-control" value="${p.age || ''}"></div>
+                <div class="col-md-4"><label class="small fw-bold">Blood</label><select id="pBlood" class="form-select">
+    <option>A+</option>
+    <option>A-</option>
+    <option>B+</option>
+    <option>B-</option>
+    <option>AB+</option>
+    <option>AB-</option>
+    <option>O+</option>
+    <option>O-</option>
+    </select></div>
+                <div class="col-12"><label class="small fw-bold">Medical History</label><textarea id="pHistory" class="form-control">${p.history || ''}</textarea></div>
+                <button class="btn btn-primary fw-bold" onclick="saveProfile()">Update Profile</button>
+            </div>`;
+        }
+        function saveProfile() {
+            const data = { address: document.getElementById('pAddress').value, age: document.getElementById('pAge').value, blood: document.getElementById('pBlood').value, history: document.getElementById('pHistory').value };
+            profiles[currentUser.id] = data; localStorage.setItem('cp_profiles', JSON.stringify(profiles)); alert("Clinic Profile Updated!");
+        }
+        function initDocScheduleTab() { document.getElementById('scheduleInject').innerHTML = `<h5>Shift Management</h5><div id="daysCheckboxes" class="my-3"></div><button class="btn btn-success" onclick="updateDocSchedule()">Save Shifts</button>`; const div = document.getElementById('daysCheckboxes'); div.innerHTML = dayNames.map((d, i) => `<div class="form-check form-check-inline"><input class="form-check-input d-chk" type="checkbox" value="${i}" ${currentUser.days.includes(i) ? 'checked' : ''}><label class="form-check-label">${d}</label></div>`).join(''); }
+        function updateDocSchedule() { const newD = Array.from(document.querySelectorAll('.d-chk:checked')).map(c => parseInt(c.value)); const idx = doctors.findIndex(d => d.id === currentUser.id); doctors[idx].days = newD; localStorage.setItem('cp_doctors', JSON.stringify(doctors)); alert("Clinic Schedule Updated!"); location.reload(); }
+        function viewPatRecord(pid) { const p = profiles[pid] || {}; document.getElementById('patRecordContent').innerHTML = `<div class="row text-dark"><div class="col-6"><p><b>Age:</b> ${p.age || 'N/A'}</p><p><b>Blood:</b> ${p.blood || 'N/A'}</p></div><div class="col-6"><p><b>History:</b> ${p.history || 'N/A'}</p></div><hr></div>`; new bootstrap.Modal(document.getElementById('patRecordModal')).show(); }
+        function submitFeedback() { const a = apps.find(x => x.id === activeAppId); feedbacks.push({ docName: a.docName, rate: document.getElementById('fRate').value, comment: document.getElementById('fComment').value }); localStorage.setItem('cp_feedbacks', JSON.stringify(feedbacks)); alert("Thank you for your feedback!"); bootstrap.Modal.getInstance(document.getElementById('feedbackModal')).hide(); }
+        function renderPatientApps() { document.getElementById('patientTable').innerHTML = apps.filter(a => a.patId == currentUser.id).map(a => `<tr><td>${a.docName}</td><td>${a.date}</td><td><span class="status-badge st-${a.status.toLowerCase()}">${a.status}</span></td><td><button class="btn btn-sm btn-info text-white" onclick="openRx(${a.id})">View</button></td></tr>`).join(''); }
+    </script>
+</body>
+
+</html>
